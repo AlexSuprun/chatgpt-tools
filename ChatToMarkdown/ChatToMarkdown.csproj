@@ -7,6 +7,7 @@
         <UseWindowsForms>true</UseWindowsForms>
         <ImplicitUsings>enable</ImplicitUsings>
         <ApplicationIcon>file.ico</ApplicationIcon>
+        <AssemblyName>Chat to Markdown</AssemblyName>
     </PropertyGroup>
 
     <ItemGroup>
