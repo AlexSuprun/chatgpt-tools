@@ -13,38 +13,38 @@ public partial class MainForm : Form
     {
         if (string.IsNullOrEmpty(JsonTextBox.Text))
         {
-            MessageBox.Show("Json is empty", "", MessageBoxButtons.OK, MessageBoxIcon.Error); 
+            MessageBox.Show("Json is empty", "", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            return; 
         }
 
-        var dialog = new SaveFileDialog();
-        dialog.Filter = "Markdown Files (*.md)|*.md";
-
-        if (dialog.ShowDialog() != DialogResult.OK) return;
 
         try
         {
-            var messages = ChatConverter.ExtractMessages(JsonTextBox.Text);
-            var markdown = ChatConverter.ConvertToMarkdown(messages);
+            var chat = ChatConverter.ExtractMessages(JsonTextBox.Text);
+            var markdown = ChatConverter.ConvertToMarkdown(chat.Conversation, chat.Messages);
 
-            File.WriteAllText(dialog.FileName, markdown); 
-            
-            try
+            var dialog = new SaveFileDialog();
+            dialog.Filter = "Markdown Files (*.md)|*.md";
+            dialog.FileName = $"{chat.Conversation.Title}.md";
+
+            if (dialog.ShowDialog() != DialogResult.OK) return;
+
+
+            File.WriteAllText(dialog.FileName, markdown);
+
+            if (openCheckBox.Checked)
             {
-                // Launch the file with its default program
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = dialog.FileName,
                     UseShellExecute = true // Important for opening in default associated application
                 });
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"An error occurred while trying to open the file: {ex.Message}");
-            }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"{ex.GetType().Name}\n{ex.Message}", "Exception", MessageBoxButtons.OK, MessageBoxIcon.Error);
-        } 
+            MessageBox.Show($"{ex.GetType().Name}\n{ex.Message}", "Exception", MessageBoxButtons.OK,
+                MessageBoxIcon.Error);
+        }
     }
 }

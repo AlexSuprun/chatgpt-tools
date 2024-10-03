@@ -3,13 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace ChatToMarkdown;
 
 public class ChatConverter
 {
-    public static List<MessageNode> ExtractMessages(string json)
+    public static (Conversation Conversation, List<MessageNode> Messages)  ExtractMessages(string json)
     {
         var messagesDict = new Dictionary<string, MessageNode>();
 
@@ -37,9 +38,8 @@ public class ChatConverter
         // Build tree
         foreach (var node in messagesDict.Values)
         {
-            if (!string.IsNullOrEmpty(node.ParentId) && messagesDict.ContainsKey(node.ParentId))
+            if (!string.IsNullOrEmpty(node.ParentId) && messagesDict.TryGetValue(node.ParentId, out var parent))
             {
-                var parent = messagesDict[node.ParentId];
                 parent.Children.Add(node);
                 node.IsRoot = false;
             }
@@ -59,12 +59,25 @@ public class ChatConverter
             }
         }
 
-        return rootNodes;
+        return (conversation, rootNodes) ;
     }
 
-    public static string ConvertToMarkdown(List<MessageNode> messages)
+    public static string ConvertToMarkdown(Conversation conversation, List<MessageNode> messages)
     {
         var markdown = new StringBuilder();
+
+        markdown.AppendLine("---");
+        var createdDateTime = conversation.CreateTimeInMs.ToDateTime();
+        if(createdDateTime.HasValue)
+        {
+            markdown.AppendLine($"created: {createdDateTime.Value.ToString("yyyy-MM-dd")}");
+        }
+
+        markdown.AppendLine("is: \"[[ChatGPT Chat]]\"");
+        
+        markdown.AppendLine("---");
+        markdown.AppendLine($"# {conversation.Title}");
+
 
         foreach (var message in messages)
         {
@@ -76,14 +89,40 @@ public class ChatConverter
 
     static void AppendMessage(StringBuilder markdown, MessageNode message)
     {
-        markdown.AppendLine("---");
-        markdown.AppendLine("---");
-        markdown.AppendLine("---");
-        markdown.AppendLine($"**{message.Author?.ToUpper()}**:");
-        markdown.AppendLine();
-        markdown.AppendLine($"{message.Content}");
-        markdown.AppendLine();
+        var author = message.Author != null ? message.Author.ToUpper() : "UNKNOWN";
+        
+        var codeBlockCount = Regex.Matches(message.Content, "```").Count;
+        if (codeBlockCount % 2 != 0)
+        {
+            message.Content += "\n```";
+        }
 
+        if (author == "USER")
+        {
+            markdown.AppendLine($"\ud83d\ude4b **{author}** \ud83d\ude4b:");
+            markdown.AppendLine();
+
+            markdown.AppendLine($"> {message.Content.Replace("\n", "\n> ")}");
+            markdown.AppendLine();
+        }
+        else if (author == "ASSISTANT")
+        {
+            markdown.AppendLine($"\ud83e\udd16 **{author}** \ud83e\udd16:");
+            markdown.AppendLine();
+            // Output assistant's message directly (supports markdown and code blocks)
+            markdown.AppendLine(message.Content);
+            markdown.AppendLine();
+        }
+        else
+        {
+            // For other roles (e.g., system), output normally
+            markdown.AppendLine($"**{author}**:");
+            markdown.AppendLine();
+            markdown.AppendLine(message.Content);
+            markdown.AppendLine();
+        }
+
+        // Process child messages recursively
         foreach (var child in message.Children)
         {
             AppendMessage(markdown, child);
