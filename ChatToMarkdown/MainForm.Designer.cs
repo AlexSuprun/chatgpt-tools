@@ -29,6 +29,7 @@ partial class MainForm
     /// </summary>
     private void InitializeComponent()
     {
+        System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
         ConvertButton = new Button();
         JsonTextBox = new TextBox();
         openCheckBox = new CheckBox();
@@ -72,7 +73,10 @@ partial class MainForm
         Controls.Add(openCheckBox);
         Controls.Add(JsonTextBox);
         Controls.Add(ConvertButton);
-        FormBorderStyle = FormBorderStyle.FixedToolWindow;
+        FormBorderStyle = FormBorderStyle.FixedDialog;
+        Icon = (Icon)resources.GetObject("$this.Icon");
+        MaximizeBox = false;
+        MinimizeBox = false;
         Name = "MainForm";
         Text = "ChatGPT Json to Markdown";
         ResumeLayout(false);
