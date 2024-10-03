@@ -31,6 +31,7 @@ partial class MainForm
     {
         ConvertButton = new Button();
         JsonTextBox = new TextBox();
+        openCheckBox = new CheckBox();
         SuspendLayout();
         // 
         // ConvertButton
@@ -53,11 +54,22 @@ partial class MainForm
         JsonTextBox.Size = new Size(1147, 604);
         JsonTextBox.TabIndex = 1;
         // 
+        // openCheckBox
+        // 
+        openCheckBox.AutoSize = true;
+        openCheckBox.Location = new Point(902, 661);
+        openCheckBox.Name = "openCheckBox";
+        openCheckBox.Size = new Size(97, 19);
+        openCheckBox.TabIndex = 2;
+        openCheckBox.Text = "Open md File";
+        openCheckBox.UseVisualStyleBackColor = true;
+        // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1209, 707);
+        Controls.Add(openCheckBox);
         Controls.Add(JsonTextBox);
         Controls.Add(ConvertButton);
         FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -71,4 +83,5 @@ partial class MainForm
 
     private Button ConvertButton;
     private TextBox JsonTextBox;
+    private CheckBox openCheckBox;
 }
