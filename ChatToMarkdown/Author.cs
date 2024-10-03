@@ -10,3 +10,5 @@ public class Author
     [JsonProperty("metadata")]
     public object Metadata { get; set; }
 }
+
+
