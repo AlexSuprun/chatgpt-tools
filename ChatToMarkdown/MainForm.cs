@@ -27,7 +27,7 @@ public partial class MainForm : Form
             dialog.Filter = "Markdown Files (*.md)|*.md";
             dialog.FileName = $"{chat.Conversation.Title}.md";
 
-            if (dialog.ShowDialog() != DialogResult.OK) return;
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
 
 
             File.WriteAllText(dialog.FileName, markdown);
@@ -40,11 +40,28 @@ public partial class MainForm : Form
                     UseShellExecute = true // Important for opening in default associated application
                 });
             }
+
+            if (SaveJsonCheckBox.Checked)
+            {
+                SaveJson(chat);
+            }
         }
         catch (Exception ex)
         {
             MessageBox.Show($"{ex.GetType().Name}\n{ex.Message}", "Exception", MessageBoxButtons.OK,
                 MessageBoxIcon.Error);
+        }
+    }
+
+    private void SaveJson((Conversation Conversation, List<MessageNode> Messages) chat)
+    {
+        var dialog = new SaveFileDialog();
+        dialog.Filter = "JSON Files(*.json)|*.json";
+        dialog.FileName = $"{chat.Conversation.Title}.json";
+
+        if(dialog.ShowDialog(this) != DialogResult.OK)
+        {
+            File.WriteAllText(dialog.FileName, JsonTextBox.Text);
         }
     }
 }
