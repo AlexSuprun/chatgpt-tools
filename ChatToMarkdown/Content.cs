@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace ChatToMarkdown;
 
@@ -8,5 +9,5 @@ public class Content
     public string ContentType { get; set; }
 
     [JsonProperty("parts")]
-    public List<string> Parts { get; set; }
+    public List<JToken> Parts { get; set; }
 }
