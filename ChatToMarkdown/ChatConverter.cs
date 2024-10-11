@@ -60,9 +60,7 @@ public class ChatConverter
         {
             var nodeId = mappingItem.Key;
             var nodeData = mappingItem.Value;
-
-            //JValue
-
+            
             var messageNode = new MessageNode
             {
                 Id = nodeData.Message?.Id,
