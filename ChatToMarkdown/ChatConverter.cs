@@ -5,33 +5,71 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 
 namespace ChatToMarkdown;
 
 public class ChatConverter
 {
-    public static (Conversation Conversation, List<MessageNode> Messages)  ExtractMessages(string json)
+    private static readonly HashSet<string> SupportedContentTypes = ["audio_transcription", "audio_asset_pointer",  "real_time_user_audio_video_asset_pointer" ];  
+    
+    private static string GetContent(IList<JToken> contentParts)
+    {
+        if (contentParts == null || !contentParts.Any()) return string.Empty;
+
+        var conversationParts = new List<string>(contentParts.Count);
+
+        foreach (var contentPart in contentParts)
+        {
+            if (contentPart is JObject)
+            {
+                var contentType = contentPart["content_type"]?.ToString();
+
+                if (!SupportedContentTypes.Contains(contentType))
+                {
+                    throw new NotSupportedException($"{contentPart} is not supported by the program"); 
+                }
+
+                if (contentType == "audio_transcription")
+                {
+                    var text = contentPart["text"]?.ToString();
+
+                    if (!string.IsNullOrEmpty(text))
+                    {
+                        conversationParts.Add(text);    
+                    }
+                }
+            }
+            else
+            {
+                conversationParts.Add(contentPart.ToString());    
+            }
+        }
+
+        return string.Join("\n", conversationParts);
+    }
+
+    public static (Conversation Conversation, List<MessageNode> Messages) ExtractMessages(string json)
     {
         var messagesDict = new Dictionary<string, MessageNode>();
 
         var conversation = JsonConvert.DeserializeObject<Conversation>(json);
+
         // Build nodes
         foreach (var mappingItem in conversation.Mapping)
         {
             var nodeId = mappingItem.Key;
             var nodeData = mappingItem.Value;
-
+            
             var messageNode = new MessageNode
             {
                 Id = nodeData.Message?.Id,
                 Author = nodeData.Message?.Author?.Role,
-                Content = nodeData.Message?.Content?.Parts != null
-                    ? string.Join("\n", nodeData.Message.Content.Parts)
-                    : "",
+                Content = GetContent(nodeData.Message?.Content?.Parts),
                 ParentId = nodeData.Parent,
-                Children = new List<MessageNode>()
+                Children = []
             };
-
+            
             messagesDict[nodeId] = messageNode;
         }
 
@@ -59,7 +97,7 @@ public class ChatConverter
             }
         }
 
-        return (conversation, rootNodes) ;
+        return (conversation, rootNodes);
     }
 
     public static string ConvertToMarkdown(Conversation conversation, List<MessageNode> messages)
@@ -68,13 +106,13 @@ public class ChatConverter
 
         markdown.AppendLine("---");
         var createdDateTime = conversation.CreateTimeInMs.ToDateTime();
-        if(createdDateTime.HasValue)
+        if (createdDateTime.HasValue)
         {
             markdown.AppendLine($"created: {createdDateTime.Value.ToString("yyyy-MM-dd")}");
         }
 
         markdown.AppendLine("is: \"[[ChatGPT Chat]]\"");
-        
+
         markdown.AppendLine("---");
         markdown.AppendLine($"# {conversation.Title}");
 
@@ -90,7 +128,7 @@ public class ChatConverter
     static void AppendMessage(StringBuilder markdown, MessageNode message)
     {
         var author = message.Author != null ? message.Author.ToUpper() : "UNKNOWN";
-        
+
         var codeBlockCount = Regex.Matches(message.Content, "```").Count;
         if (codeBlockCount % 2 != 0)
         {
@@ -99,27 +137,35 @@ public class ChatConverter
 
         if (author == "USER")
         {
-            markdown.AppendLine($"\ud83d\ude4b **{author}** \ud83d\ude4b:");
-            markdown.AppendLine();
+            if (!string.IsNullOrEmpty(message.Content))
+            {
+                markdown.AppendLine($"\ud83d\ude4b **{author}** \ud83d\ude4b:");
+                markdown.AppendLine();
 
-            markdown.AppendLine($"> {message.Content.Replace("\n", "\n> ")}");
-            markdown.AppendLine();
+                markdown.AppendLine($"> {message.Content.Replace("\n", "\n> ")}");
+                markdown.AppendLine();
+            }
         }
         else if (author == "ASSISTANT")
         {
-            markdown.AppendLine($"\ud83e\udd16 **{author}** \ud83e\udd16:");
-            markdown.AppendLine();
-            // Output assistant's message directly (supports markdown and code blocks)
-            markdown.AppendLine(message.Content);
-            markdown.AppendLine();
+            if (!string.IsNullOrEmpty(message.Content))
+            {
+                markdown.AppendLine($"\ud83e\udd16 **{author}** \ud83e\udd16:");
+                markdown.AppendLine();
+                // Output assistant's message directly (supports markdown and code blocks)
+                markdown.AppendLine(message.Content);
+                markdown.AppendLine();
+            }
         }
         else
         {
-            // For other roles (e.g., system), output normally
-            markdown.AppendLine($"**{author}**:");
-            markdown.AppendLine();
-            markdown.AppendLine(message.Content);
-            markdown.AppendLine();
+            if(!string.IsNullOrEmpty(message.Content))
+            {
+                markdown.AppendLine($"**{author}**:");
+                markdown.AppendLine();
+                markdown.AppendLine(message.Content);
+                markdown.AppendLine();
+            }
         }
 
         // Process child messages recursively
