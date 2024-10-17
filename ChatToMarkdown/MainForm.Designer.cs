@@ -32,7 +32,7 @@ partial class MainForm
         System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
         ConvertButton = new Button();
         JsonTextBox = new TextBox();
-        openCheckBox = new CheckBox();
+        OpenCheckBox = new CheckBox();
         SaveJsonCheckBox = new CheckBox();
         SuspendLayout();
         // 
@@ -58,13 +58,13 @@ partial class MainForm
         // 
         // openCheckBox
         // 
-        openCheckBox.AutoSize = true;
-        openCheckBox.Location = new Point(902, 661);
-        openCheckBox.Name = "openCheckBox";
-        openCheckBox.Size = new Size(97, 19);
-        openCheckBox.TabIndex = 2;
-        openCheckBox.Text = "Open md File";
-        openCheckBox.UseVisualStyleBackColor = true;
+        OpenCheckBox.AutoSize = true;
+        OpenCheckBox.Location = new Point(902, 661);
+        OpenCheckBox.Name = "OpenCheckBox";
+        OpenCheckBox.Size = new Size(97, 19);
+        OpenCheckBox.TabIndex = 2;
+        OpenCheckBox.Text = "Open md File";
+        OpenCheckBox.UseVisualStyleBackColor = true;
         // 
         // SaveJsonCheckBox
         // 
@@ -82,7 +82,7 @@ partial class MainForm
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(1209, 707);
         Controls.Add(SaveJsonCheckBox);
-        Controls.Add(openCheckBox);
+        Controls.Add(OpenCheckBox);
         Controls.Add(JsonTextBox);
         Controls.Add(ConvertButton);
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -91,6 +91,7 @@ partial class MainForm
         MinimizeBox = false;
         Name = "MainForm";
         Text = "ChatGPT Json to Markdown";
+        StartPosition = FormStartPosition.CenterScreen;
         ResumeLayout(false);
         PerformLayout();
     }
@@ -99,6 +100,6 @@ partial class MainForm
 
     private Button ConvertButton;
     private TextBox JsonTextBox;
-    private CheckBox openCheckBox;
+    private CheckBox OpenCheckBox;
     private CheckBox SaveJsonCheckBox;
 }
