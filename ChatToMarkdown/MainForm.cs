@@ -32,7 +32,7 @@ public partial class MainForm : Form
 
             File.WriteAllText(dialog.FileName, markdown);
 
-            if (openCheckBox.Checked)
+            if (OpenCheckBox.Checked)
             {
                 Process.Start(new ProcessStartInfo
                 {
