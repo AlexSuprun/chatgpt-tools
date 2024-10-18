@@ -2,7 +2,8 @@ namespace YoutubeDownloader;
 
 public partial class MainForm : Form
 {
-    private readonly VideoProcessor _processor = new VideoProcessor();
+    private readonly AudioTranscriber _audioTranscriber = new(Program.OpenAiConfig.ApiKey); 
+    private readonly VideoProcessor _processor = new();
     public MainForm()
     {
         InitializeComponent();
@@ -38,8 +39,21 @@ public partial class MainForm : Form
             
             StatusLabel.Text = "Downloading";
             
-            var videoParts =  await _processor.DownloadAsync(textBox1.Text, downloadProgress); 
-            
+            var videoParts =  await _processor.DownloadAsync(textBox1.Text, downloadProgress);
+
+            StatusLabel.Text = "Transcribing";
+            var subtitles = await _audioTranscriber.TranscribeToSrtAsync(videoParts.AudioFile);
+
+            if (!string.IsNullOrEmpty(subtitles))
+            {
+                var outputdDirectoryName = Path.GetDirectoryName(saveDialog.FileName);
+                var subtitlesFile = Path.Combine(outputdDirectoryName,
+                    $"{Path.GetFileNameWithoutExtension(saveDialog.FileName)}.srt"); 
+                
+                await using var writer = new StreamWriter(subtitlesFile);
+                await writer.WriteAsync(subtitles);
+            }
+
             StatusLabel.Text = "Merging";
             await FFmpegMerger.Merge(videoParts.AudioFile, videoParts.VideoFile, saveDialog.FileName, mergeProgress);
             File.Delete(videoParts.AudioFile);
@@ -48,32 +62,4 @@ public partial class MainForm : Form
             StatusLabel.Text = "Completed"; 
         }
     }
-
-    // async Task DownloadYouTubeVideo(string videoUrl, string outputDirectory)
-    // {
-    //     var processor = new VideoProcessor();
-    //
-    //     var downloadProgress = new Progress<double>(value =>
-    //     {
-    //         StatusLabel.Text = "Downloading: " + value.ToString();
-    //         ProcessingProgressBar.Value = (int)(value * 100);
-    //     });
-    //
-    //     var processProgress = new Progress<double>(value =>
-    //     {
-    //         StatusLabel.Text = "Processing: " + value.ToString();
-    //         ProcessingProgressBar.Value = (int)(value * 100);
-    //     });
-    //
-    //
-    //
-    //     var videoInfo = await processor.GetVideoInfo(videoUrl);
-    //     var sanitizedTitle = string.Join("_", videoInfo.Title.Split(Path.GetInvalidFileNameChars()));
-    //
-    //     var result =  await processor.DownloadAsync(videoUrl, @"C:\Users\alex.suprun\Desktop\Youtube downloaded", downloadProgress, processProgress);
-    //     await processor.MergeAsync(result.AudioFile, result.VideoFile, @"C:\Users\alex.suprun\Desktop\Youtube downloaded\mergedVideo.mp4");
-    //
-    //     File.Delete(result.AudioFile);
-    //     File.Delete(result.VideoFile); 
-    // }
 }
