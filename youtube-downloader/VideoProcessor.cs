@@ -10,12 +10,24 @@ public class VideoProcessor
     private readonly YoutubeClient _youtube;
     public VideoProcessor()
     {
-        _youtube = new YoutubeClient(); 
+        _youtube = new YoutubeClient();
     }
 
     public async Task<Video> GetVideoInfo(string videoUrl)
     {
         return await _youtube.Videos.GetAsync(videoUrl);
+    }
+
+    public async Task DownloadAudioAsync(string videoUrl, string targetUrl, IProgress<double> downloadProgress)
+    {
+        var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoUrl);
+
+        var audioStreamInfo = streamManifest.Streams.OfType<AudioOnlyStreamInfo>()
+            .Where(x => x.Container.Name == Container.Mp4.Name)
+            .OrderByDescending(x => x.Bitrate)
+            .FirstOrDefault();
+
+        await _youtube.Videos.Streams.DownloadAsync(audioStreamInfo, targetUrl, downloadProgress);
     }
 
     public async Task<(string AudioFile, string VideoFile)> DownloadAsync(string videoUrl, IProgress<double> downloadProgress)
@@ -42,38 +54,38 @@ public class VideoProcessor
 
     }
 
-public void MergeAsync(string audioFile, string videoFile, string outputFile)
-{
-    string ffmpegCommand = $"-y -i \"{videoFile}\" -i \"{audioFile}\" -c:v copy -c:a aac \"{outputFile}\"";
-
-    var process = new Process
+    public void MergeAsync(string audioFile, string videoFile, string outputFile)
     {
-        StartInfo = new ProcessStartInfo
+        string ffmpegCommand = $"-y -i \"{videoFile}\" -i \"{audioFile}\" -c:v copy -c:a aac \"{outputFile}\"";
+
+        var process = new Process
         {
-            FileName = "ffmpeg",
-            Arguments = ffmpegCommand,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            // Redirect standard input and close it to prevent FFmpeg from waiting for input
-            RedirectStandardInput = true
-        },
-        EnableRaisingEvents = true
-    };
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "ffmpeg",
+                Arguments = ffmpegCommand,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                // Redirect standard input and close it to prevent FFmpeg from waiting for input
+                RedirectStandardInput = true
+            },
+            EnableRaisingEvents = true
+        };
 
-    process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
-    process.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
+        process.OutputDataReceived += (sender, e) => Console.WriteLine(e.Data);
+        process.ErrorDataReceived += (sender, e) => Console.WriteLine(e.Data);
 
-    process.Start();
+        process.Start();
 
-    // Close standard input to prevent FFmpeg from waiting for input
-    process.StandardInput.Close();
+        // Close standard input to prevent FFmpeg from waiting for input
+        process.StandardInput.Close();
 
-    process.BeginOutputReadLine();
-    process.BeginErrorReadLine();
+        process.BeginOutputReadLine();
+        process.BeginErrorReadLine();
 
-    process.WaitForExit();
-}
+        process.WaitForExit();
+    }
 
 }

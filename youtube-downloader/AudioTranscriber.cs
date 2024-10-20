@@ -1,69 +1,148 @@
 using System.Net.Http.Headers;
+using System.Text;
 
-namespace YoutubeDownloader;
-
-public class AudioTranscriber
+namespace YoutubeDownloader
 {
-    private readonly string _apiKey;
-
-    public AudioTranscriber(string apiKey)
+    public class AudioTranscriber
     {
-        _apiKey = apiKey;
-    }
+        private readonly string _apiKey;
 
-    public async Task<string> TranscribeToSrtAsync(string audioFilePath)
-    {
-        if (!File.Exists(audioFilePath))
-            throw new FileNotFoundException("Audio file not found.", audioFilePath);
-
-        var url = "https://api.openai.com/v1/audio/transcriptions";
-
-        using (var httpClient = new HttpClient())
+        public AudioTranscriber(string apiKey)
         {
-            // Set the authorization header with the API key
-            httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+            _apiKey = apiKey;
+        }
 
-            // Create the multipart form data content
-            using (var content = new MultipartFormDataContent())
+        
+        public async Task<string> TranscribeAll(IList<string> chunks)
+        {
+            var allSubtitles = new List<string>();
+
+            // Transcribe each chunk and collect the results
+            for (int i = 0; i < chunks.Count; i++)
             {
-                // Read the audio file bytes
-                var audioBytes = await File.ReadAllBytesAsync(audioFilePath);
-                var audioContent = new ByteArrayContent(audioBytes);
-
-                // Set the content type based on the file extension
-                var fileExtension = Path.GetExtension(audioFilePath).ToLowerInvariant();
-                string contentType = fileExtension switch
+                string chunkFilePath = chunks[i];
+                var srtContent = await TranscribeToSrtAsync(chunkFilePath);
+                if (!string.IsNullOrEmpty(srtContent))
                 {
-                    ".mp3" => "audio/mpeg",
-                    ".mp4" => "audio/mp4",
-                    ".mpeg" => "audio/mpeg",
-                    ".mpga" => "audio/mpeg",
-                    ".m4a" => "audio/m4a",
-                    ".wav" => "audio/wav",
-                    ".webm" => "audio/webm",
-                    _ => throw new NotSupportedException("Unsupported audio format")
-                };
-                audioContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
-
-                // Add the audio file content
-                content.Add(audioContent, "file", Path.GetFileName(audioFilePath));
-
-                // Add other parameters
-                content.Add(new StringContent("whisper-1"), "model");
-                content.Add(new StringContent("srt"), "response_format");
-
-                // Send the POST request
-                var response = await httpClient.PostAsync(url, content);
-                var responseContent = await response.Content.ReadAsStringAsync();
-
-                if (response.IsSuccessStatusCode)
-                {
-                    return responseContent; // This is your .srt content
+                    allSubtitles.Add(srtContent);
                 }
 
-                Console.WriteLine("Error: " + responseContent);
-                return null;
+                var srtFolderName = Path.GetDirectoryName(chunkFilePath); 
+                var srtChunkFileName = Path.GetFileNameWithoutExtension(chunkFilePath)+".srt";
+                var chunkSrtFilePath = Path.Combine(srtFolderName, srtChunkFileName);
+
+                await using (var writer = new StreamWriter(chunkSrtFilePath))
+                {
+                    await writer.WriteAsync(srtContent); 
+                }
+                //File.Delete(chunkFilePath); // Clean up chunk file
             }
+
+            return string.Empty;    
+            // Combine all subtitles into a single string
+            return MergeSrtFiles(allSubtitles);
+        }
+        
+
+        // Method to transcribe an individual file to SRT format
+        public async Task<string> TranscribeToSrtAsync(string audioFilePath)
+        {
+            if (!File.Exists(audioFilePath))
+                throw new FileNotFoundException("Audio file not found.", audioFilePath);
+
+            var url = "https://api.openai.com/v1/audio/transcriptions";
+
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+
+                using (var content = new MultipartFormDataContent())
+                {
+                    try
+                    {
+                        var audioBytes = await File.ReadAllBytesAsync(audioFilePath);
+                        var audioContent = new ByteArrayContent(audioBytes);
+
+                        string contentType = GetContentType(audioFilePath);
+                        audioContent.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
+
+                        content.Add(audioContent, "file", Path.GetFileName(audioFilePath));
+                        content.Add(new StringContent("whisper-1"), "model");
+                        content.Add(new StringContent("srt"), "response_format");
+
+                        var response = await httpClient.PostAsync(url, content);
+                        var responseContent = await response.Content.ReadAsStringAsync();
+
+                        if (response.IsSuccessStatusCode)
+                        {
+                            return responseContent; // Return .srt content
+                        }
+
+                        Console.WriteLine("Error: " + responseContent);
+                        return null;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                        throw;
+                    }
+                }
+            }
+        }
+
+        // Method to split audio file into chunks
+        private List<string> SplitAudioFile(string inputFilePath, int chunkDurationInSeconds)
+        {
+            var outputFiles = new List<string>();
+
+            
+
+            return outputFiles;
+        }
+
+
+        // Utility method to get content type based on file extension
+        private string GetContentType(string filePath)
+        {
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+            return fileExtension switch
+            {
+                ".mp3" => "audio/mpeg",
+                ".mp4" => "audio/mp4",
+                ".mpeg" => "audio/mpeg",
+                ".mpga" => "audio/mpeg",
+                ".m4a" => "audio/m4a",
+                ".wav" => "audio/wav",
+                ".webm" => "audio/webm",
+                _ => throw new NotSupportedException("Unsupported audio format")
+            };
+        }
+
+        // Merge multiple SRT strings into one
+        private string MergeSrtFiles(List<string> srtFilesContent)
+        {
+            var mergedSrt = new StringBuilder();
+            int subtitleIndex = 1;
+
+            foreach (var srtContent in srtFilesContent)
+            {
+                var lines = srtContent.Split('\n');
+                foreach (var line in lines)
+                {
+                    // Update subtitle numbering
+                    if (int.TryParse(line.Trim(), out _))
+                    {
+                        mergedSrt.AppendLine(subtitleIndex.ToString());
+                        subtitleIndex++;
+                    }
+                    else
+                    {
+                        mergedSrt.AppendLine(line);
+                    }
+                }
+            }
+
+            return mergedSrt.ToString();
         }
     }
 }
