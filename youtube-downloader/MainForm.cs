@@ -127,9 +127,6 @@ public partial class MainForm : Form
         
         SubtitleProcessor.Merge(subtitleFiles, @"C:\Users\alex.suprun\Desktop\Final\Wondershare Filmora 13 Complete Editing Tutorial for Beginners in 2024.srt");
         
-        
-        Create full flow, from takiing file , transcribing it and merging subtitles
-            Check edge cases when subtitles and at 20:00 or start in 00:00
         return; 
     }
 

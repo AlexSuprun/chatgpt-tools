@@ -33,7 +33,6 @@ partial class MainForm
         button1 = new Button();
         ProcessingProgressBar = new ProgressBar();
         StatusLabel = new Label();
-        TranscribeButton = new Button();
         SuspendLayout();
         // 
         // textBox1
@@ -50,7 +49,7 @@ partial class MainForm
         button1.Name = "button1";
         button1.Size = new Size(194, 23);
         button1.TabIndex = 1;
-        button1.Text = "Save with AI Subtitles";
+        button1.Text = "Download";
         button1.UseVisualStyleBackColor = true;
         button1.Click += DownloadButton_Click;
         // 
@@ -71,22 +70,11 @@ partial class MainForm
         StatusLabel.TabIndex = 3;
         StatusLabel.Text = "label1";
         // 
-        // TranscribeButton
-        // 
-        TranscribeButton.Location = new Point(551, 326);
-        TranscribeButton.Name = "TranscribeButton";
-        TranscribeButton.Size = new Size(184, 23);
-        TranscribeButton.TabIndex = 4;
-        TranscribeButton.Text = "Transcribe";
-        TranscribeButton.UseVisualStyleBackColor = true;
-        TranscribeButton.Click += TranscribeButton_Click;
-        // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(800, 450);
-        Controls.Add(TranscribeButton);
         Controls.Add(StatusLabel);
         Controls.Add(ProcessingProgressBar);
         Controls.Add(button1);
@@ -103,5 +91,4 @@ partial class MainForm
     private Button button1;
     private ProgressBar ProcessingProgressBar;
     private Label StatusLabel;
-    private Button TranscribeButton;
 }
