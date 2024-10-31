@@ -21,7 +21,7 @@ public partial class MainForm : Form
     {
         StatusLabel.Text = "Initializing";
 
-        var videoInfo = await _processor.GetVideoInfo(textBox1.Text);
+        var videoInfo = await _processor.GetVideoInfo(UrlTextBox.Text);
         var sanitizedTitle = string.Join("_", videoInfo.Title.Split(Path.GetInvalidFileNameChars()));
 
         var saveDialog = new SaveFileDialog();
@@ -43,7 +43,7 @@ public partial class MainForm : Form
 
             StatusLabel.Text = "Downloading";
 
-            var videoParts = await _processor.DownloadAsync(textBox1.Text, downloadProgress);
+            var videoParts = await _processor.DownloadAsync(UrlTextBox.Text, downloadProgress);
 
             StatusLabel.Text = "Transcribing";
             var subtitles = await _audioTranscriber.TranscribeToSrtAsync(videoParts.AudioFile);
@@ -112,8 +112,6 @@ public partial class MainForm : Form
         // Ensure the duration is at least 10 minutes
         return Math.Max(chunkDurationInMinutes, 10);
     }
-
-
     
     private async void TranscribeButton_Click(object sender, EventArgs e)
     {
