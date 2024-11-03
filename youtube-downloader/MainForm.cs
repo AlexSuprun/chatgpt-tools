@@ -17,7 +17,7 @@ public partial class MainForm : Form
         Console.WriteLine(message);
     }
 
-    private async void DownloadButton_Click(object sender, EventArgs e)
+    private async void DownloadVideoButton_Click(object sender, EventArgs e)
     {
         StatusLabel.Text = "Initializing";
 
@@ -81,7 +81,7 @@ public partial class MainForm : Form
                 CreateNoWindow = true
             }
         };
-        
+
         process.Start();
         string durationStr = process.StandardOutput.ReadLine();
         process.WaitForExit();
@@ -91,9 +91,9 @@ public partial class MainForm : Form
 
         return (TimeSpan.FromSeconds(double.Parse(durationStr)), fileSize);
     }
-    
-    private const long MaxChunkSizeInBytes = 25 * 1024 * 1024; 
-    
+
+    private const long MaxChunkSizeInBytes = 25 * 1024 * 1024;
+
     public int CalculateChunkDuration(long fileSizeInBytes, TimeSpan videoDuration)
     {
         const long maxChunkSizeInBytes = 25 * 1024 * 1024; // 25 MB in bytes
@@ -112,20 +112,20 @@ public partial class MainForm : Form
         // Ensure the duration is at least 10 minutes
         return Math.Max(chunkDurationInMinutes, 10);
     }
-    
+
     private async void TranscribeButton_Click(object sender, EventArgs e)
     {
         var audioFiles = Directory.GetFiles(@"C:\Users\alex.suprun\Desktop\Final\chunks", "*.mp4")
             .ToList();
-        
+
         //await _audioTranscriber.TranscribeAll(audioFiles); 
-        
+
         var subtitleFiles = Directory.GetFiles(@"C:\Users\alex.suprun\Desktop\Final\chunks", "*.srt")
             .ToList();
-        
+
         SubtitleProcessor.Merge(subtitleFiles, @"C:\Users\alex.suprun\Desktop\Final\Wondershare Filmora 13 Complete Editing Tutorial for Beginners in 2024.srt");
-        
-        return; 
+
+        return;
     }
 
     private async Task SplitFile()
@@ -133,8 +133,8 @@ public partial class MainForm : Form
         var audioFilePath = @"C:\Users\alex.suprun\Desktop\Final\audio-track.mp4";
         var mediaInfo = GetVideoInfo(audioFilePath);
 
-        var chunkDurationInMinutes = CalculateChunkDuration(mediaInfo.fileSize, mediaInfo.duration); 
-        
+        var chunkDurationInMinutes = CalculateChunkDuration(mediaInfo.fileSize, mediaInfo.duration);
+
         int totalChunks = (int)Math.Ceiling(mediaInfo.duration.TotalMinutes / chunkDurationInMinutes);
 
         for (int i = 0; i < totalChunks; i++)
@@ -159,6 +159,34 @@ public partial class MainForm : Form
 
             // Split the file into chunks asynchronously, awaiting each chunk completion
             await FFMpeg.SubVideoAsync(audioFilePath, outputPath, from, to);
+        }
+    }
+
+    private async void DownloadAudioButton_Click(object sender, EventArgs e)
+    {
+        StatusLabel.Text = "Initializing";
+
+        var videoInfo = await _processor.GetVideoInfo(UrlTextBox.Text);
+        var sanitizedTitle = string.Join("_", videoInfo.Title.Split(Path.GetInvalidFileNameChars()));
+
+        var saveDialog = new SaveFileDialog();
+        saveDialog.Filter = "mp4 files (*.mp4)|*.mp4";
+        saveDialog.FileName = $"{sanitizedTitle}.mp4";
+
+
+        if (saveDialog.ShowDialog() == DialogResult.OK)
+        {
+            var downloadProgress = new Progress<double>(value =>
+            {
+                ProcessingProgressBar.Value = (int)(value * 100);
+            });
+
+            StatusLabel.Text = "Downloading";
+
+            await _processor.DownloadAudioAsync(UrlTextBox.Text, saveDialog.FileName, downloadProgress);
+
+            ProcessingProgressBar.Value = ProcessingProgressBar.Maximum;
+            StatusLabel.Text = "Completed";
         }
     }
 }

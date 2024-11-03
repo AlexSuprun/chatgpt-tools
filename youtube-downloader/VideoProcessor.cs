@@ -18,16 +18,16 @@ public class VideoProcessor
         return await _youtube.Videos.GetAsync(videoUrl);
     }
 
-    public async Task DownloadAudioAsync(string videoUrl, string targetUrl, IProgress<double> downloadProgress)
+    public async Task DownloadAudioAsync(string sourceUrl, string destPath, IProgress<double> downloadProgress)
     {
-        var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(videoUrl);
+        var streamManifest = await _youtube.Videos.Streams.GetManifestAsync(sourceUrl);
 
         var audioStreamInfo = streamManifest.Streams.OfType<AudioOnlyStreamInfo>()
             .Where(x => x.Container.Name == Container.Mp4.Name)
-            .OrderByDescending(x => x.Bitrate)
+            .OrderBy(x => x.Size)
             .FirstOrDefault();
 
-        await _youtube.Videos.Streams.DownloadAsync(audioStreamInfo, targetUrl, downloadProgress);
+        await _youtube.Videos.Streams.DownloadAsync(audioStreamInfo, destPath, downloadProgress);
     }
 
     public async Task<(string AudioFile, string VideoFile)> DownloadAsync(string videoUrl, IProgress<double> downloadProgress)

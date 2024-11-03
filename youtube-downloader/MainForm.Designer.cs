@@ -30,9 +30,10 @@ partial class MainForm
     private void InitializeComponent()
     {
         UrlTextBox = new TextBox();
-        DownloadButton = new Button();
+        DownloadVideoButton = new Button();
         ProcessingProgressBar = new ProgressBar();
         StatusLabel = new Label();
+        DownloadAudioButton = new Button();
         SuspendLayout();
         // 
         // UrlTextBox
@@ -43,15 +44,15 @@ partial class MainForm
         UrlTextBox.TabIndex = 0;
         UrlTextBox.Text = "https://www.youtube.com/watch?v=JjyR5ud57mU&t=1s";
         // 
-        // DownloadButton
+        // DownloadVideoButton
         // 
-        DownloadButton.Location = new Point(286, 145);
-        DownloadButton.Name = "DownloadButton";
-        DownloadButton.Size = new Size(194, 31);
-        DownloadButton.TabIndex = 1;
-        DownloadButton.Text = "Download";
-        DownloadButton.UseVisualStyleBackColor = true;
-        DownloadButton.Click += DownloadButton_Click;
+        DownloadVideoButton.Location = new Point(286, 145);
+        DownloadVideoButton.Name = "DownloadVideoButton";
+        DownloadVideoButton.Size = new Size(194, 31);
+        DownloadVideoButton.TabIndex = 1;
+        DownloadVideoButton.Text = "Download Video";
+        DownloadVideoButton.UseVisualStyleBackColor = true;
+        DownloadVideoButton.Click += DownloadVideoButton_Click;
         // 
         // ProcessingProgressBar
         // 
@@ -70,14 +71,25 @@ partial class MainForm
         StatusLabel.Size = new Size(0, 25);
         StatusLabel.TabIndex = 3;
         // 
+        // DownloadAudioButton
+        // 
+        DownloadAudioButton.Location = new Point(61, 145);
+        DownloadAudioButton.Name = "DownloadAudioButton";
+        DownloadAudioButton.Size = new Size(194, 31);
+        DownloadAudioButton.TabIndex = 4;
+        DownloadAudioButton.Text = "Download Audio";
+        DownloadAudioButton.UseVisualStyleBackColor = true;
+        DownloadAudioButton.Click += DownloadAudioButton_Click;
+        // 
         // MainForm
         // 
         AutoScaleDimensions = new SizeF(7F, 15F);
         AutoScaleMode = AutoScaleMode.Font;
         ClientSize = new Size(499, 193);
+        Controls.Add(DownloadAudioButton);
         Controls.Add(StatusLabel);
         Controls.Add(ProcessingProgressBar);
-        Controls.Add(DownloadButton);
+        Controls.Add(DownloadVideoButton);
         Controls.Add(UrlTextBox);
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -92,7 +104,8 @@ partial class MainForm
     #endregion
 
     private TextBox UrlTextBox;
-    private Button DownloadButton;
+    private Button DownloadVideoButton;
     private ProgressBar ProcessingProgressBar;
     private Label StatusLabel;
+    private Button DownloadAudioButton;
 }
