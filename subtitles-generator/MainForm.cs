@@ -56,24 +56,24 @@ namespace SubtitlesGenerator
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             { 
                 var sourceSubtitles = SubtitleProcessor.ParseSrtFile(openFileDialog.FileName);
-                var destSubtitles = new List<Subtitle>(sourceSubtitles.Count);
 
-                foreach (var subtitle in sourceSubtitles) 
+
+                //var destSubtitles = await TranslationService.TranslateBatchAsync(sourceSubtitles.Take(13).ToList());// new List<Subtitle>(sourceSubtitles.Count);
+                
+                var batchSize = 13; // Adjust based on context needs and token limits
+                var translatedSubtitles = new List<Subtitle>();
+                for (int i = 0; i < sourceSubtitles.Count; i += batchSize)
                 {
-                    destSubtitles.Add(new Subtitle() 
-                    {
-                        StartTime = subtitle.StartTime,
-                        EndTime = subtitle.EndTime,
-                        Index = subtitle.Index,
-                        Text = "***"+ subtitle.Text+ "***"
-                    });
+                    var batch = sourceSubtitles.GetRange(i, Math.Min(batchSize, sourceSubtitles.Count - i));
+                    var translatedBatch = await TranslationService.TranslateBatchAsync(batch);
+                    translatedSubtitles.AddRange(translatedBatch);
                 }
-
+                
                 var fileName = Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), 
                     Path.GetFileNameWithoutExtension(openFileDialog.FileName)+"."+language+".srt");
                 using var writer = new StreamWriter(fileName);
 
-                foreach (var subtitle in destSubtitles)
+                foreach (var subtitle in translatedSubtitles)
                 {
                     await writer.WriteLineAsync(subtitle.Index.ToString());
                     await writer.WriteLineAsync($"{subtitle.StartTime.ToString(@"hh\:mm\:ss\,fff")} --> {subtitle.EndTime.ToString(@"hh\:mm\:ss\,fff")}");
