@@ -55,7 +55,8 @@ namespace SubtitlesGenerator
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-
+                httpClient.Timeout = TimeSpan.FromMinutes(5); 
+                
                 using (var content = new MultipartFormDataContent())
                 {
                     try
@@ -83,7 +84,6 @@ namespace SubtitlesGenerator
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
                         throw;
                     }
                 }
