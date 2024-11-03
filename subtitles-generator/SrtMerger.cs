@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
 
-namespace SRTMerger
+namespace SubtitlesGenerator
 {
     // Subtitle class to hold subtitle data
     public class Subtitle

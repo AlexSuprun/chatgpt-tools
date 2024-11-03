@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using FFMpegCore;
 
-namespace YoutubeDownloader;
+namespace SubtitlesGenerator;
 
 public partial class MainForm : Form
 {
+    private readonly AudioTranscriber _audioTranscriber = new(Program.OpenAiConfig.ApiKey);
     private readonly VideoProcessor _processor = new();
     public MainForm()
     {
@@ -43,6 +44,19 @@ public partial class MainForm : Form
 
             var videoParts = await _processor.DownloadAsync(UrlTextBox.Text, downloadProgress);
 
+            StatusLabel.Text = "Transcribing";
+            var subtitles = await _audioTranscriber.TranscribeToSrtAsync(videoParts.AudioFile);
+
+            if (!string.IsNullOrEmpty(subtitles))
+            {
+                var outputdDirectoryName = Path.GetDirectoryName(saveDialog.FileName);
+                var subtitlesFile = Path.Combine(outputdDirectoryName,
+                    $"{Path.GetFileNameWithoutExtension(saveDialog.FileName)}.srt");
+
+                await using var writer = new StreamWriter(subtitlesFile);
+                await writer.WriteAsync(subtitles);
+            }
+
             StatusLabel.Text = "Merging";
             await FFmpegMerger.Merge(videoParts.AudioFile, videoParts.VideoFile, saveDialog.FileName, mergeProgress);
             File.Delete(videoParts.AudioFile);
@@ -76,6 +90,9 @@ public partial class MainForm : Form
 
         return (TimeSpan.FromSeconds(double.Parse(durationStr)), fileSize);
     }
+
+    private const long MaxChunkSizeInBytes = 25 * 1024 * 1024;
+
     public int CalculateChunkDuration(long fileSizeInBytes, TimeSpan videoDuration)
     {
         const long maxChunkSizeInBytes = 25 * 1024 * 1024; // 25 MB in bytes
@@ -94,6 +111,56 @@ public partial class MainForm : Form
         // Ensure the duration is at least 10 minutes
         return Math.Max(chunkDurationInMinutes, 10);
     }
+
+    private async void TranscribeButton_Click(object sender, EventArgs e)
+    {
+        var audioFiles = Directory.GetFiles(@"C:\Users\alex.suprun\Desktop\Final\chunks", "*.mp4")
+            .ToList();
+
+        //await _audioTranscriber.TranscribeAll(audioFiles); 
+
+        var subtitleFiles = Directory.GetFiles(@"C:\Users\alex.suprun\Desktop\Final\chunks", "*.srt")
+            .ToList();
+
+        SubtitleProcessor.Merge(subtitleFiles, @"C:\Users\alex.suprun\Desktop\Final\Wondershare Filmora 13 Complete Editing Tutorial for Beginners in 2024.srt");
+
+        return;
+    }
+
+    private async Task SplitFile()
+    {
+        var audioFilePath = @"C:\Users\alex.suprun\Desktop\Final\audio-track.mp4";
+        var mediaInfo = GetVideoInfo(audioFilePath);
+
+        var chunkDurationInMinutes = CalculateChunkDuration(mediaInfo.fileSize, mediaInfo.duration);
+
+        int totalChunks = (int)Math.Ceiling(mediaInfo.duration.TotalMinutes / chunkDurationInMinutes);
+
+        for (int i = 0; i < totalChunks; i++)
+        {
+            // Calculate start and end time for each chunk
+            TimeSpan from = TimeSpan.FromMinutes(i * chunkDurationInMinutes);
+            TimeSpan to = from + TimeSpan.FromMinutes(chunkDurationInMinutes);
+
+            // Ensure the last chunk does not exceed the total video duration
+            if (to > mediaInfo.duration)
+            {
+                to = mediaInfo.duration;
+            }
+
+            // Generate the output path for each chunk
+            string outputPath = Path.Combine(
+                Path.GetDirectoryName(audioFilePath),
+                $"{Path.GetFileNameWithoutExtension(audioFilePath)}_chunk_{i + 1}{Path.GetExtension(audioFilePath)}"
+            );
+
+            Console.WriteLine($"Splitting chunk {i + 1}: Start: {from}, End: {to}");
+
+            // Split the file into chunks asynchronously, awaiting each chunk completion
+            await FFMpeg.SubVideoAsync(audioFilePath, outputPath, from, to);
+        }
+    }
+
     private async void DownloadAudioButton_Click(object sender, EventArgs e)
     {
         StatusLabel.Text = "Initializing";

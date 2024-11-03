@@ -1,4 +1,4 @@
-namespace YoutubeDownloader;
+namespace SubtitlesGenerator;
 
 public sealed class OpenAiConfiguration
 {
