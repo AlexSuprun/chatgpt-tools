@@ -1,19 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
 
-namespace SRTMerger
+namespace SubtitlesGenerator
 {
-    // Subtitle class to hold subtitle data
-    public class Subtitle
-    {
-        public int Index { get; set; }
-        public TimeSpan StartTime { get; set; }
-        public TimeSpan EndTime { get; set; }
-        public string Text { get; set; }
-    }
-
     public static class SubtitleProcessor
     {
         public static void Merge(List<string> srtFiles, string outputFile)
@@ -29,7 +17,7 @@ namespace SRTMerger
                 Console.WriteLine($"Processing {srtFile}...");
 
                 // Read and parse the subtitles from the current file
-                List<Subtitle> subtitles = ParseSRTFile(srtFile);
+                List<Subtitle> subtitles = ParseSrtFile(srtFile);
 
                 // Adjust the times and indices
                 foreach (Subtitle subtitle in subtitles)
@@ -54,7 +42,7 @@ namespace SRTMerger
         }
 
         // Private helper method to parse an SRT file and return a list of Subtitle objects
-        private static List<Subtitle> ParseSRTFile(string filePath)
+        public static List<Subtitle> ParseSrtFile(string filePath)
         {
             List<Subtitle> subtitles = new List<Subtitle>();
             string[] lines = File.ReadAllLines(filePath);
