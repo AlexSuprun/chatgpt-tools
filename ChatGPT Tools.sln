@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "youtube-downloader", "youtu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "subtitles-generator", "subtitles-generator\subtitles-generator.csproj", "{9E0EE02F-03A0-4682-B7C4-549D4B5101C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ai-advantage-utils", "ai-advantage-utils\ai-advantage-utils.csproj", "{3E4D3527-E6FA-4E1E-AD60-A86C6A65EE0B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{9E0EE02F-03A0-4682-B7C4-549D4B5101C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E0EE02F-03A0-4682-B7C4-549D4B5101C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E0EE02F-03A0-4682-B7C4-549D4B5101C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E4D3527-E6FA-4E1E-AD60-A86C6A65EE0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E4D3527-E6FA-4E1E-AD60-A86C6A65EE0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E4D3527-E6FA-4E1E-AD60-A86C6A65EE0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E4D3527-E6FA-4E1E-AD60-A86C6A65EE0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

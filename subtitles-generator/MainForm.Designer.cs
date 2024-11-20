@@ -30,6 +30,7 @@
         {
             GenerateSubtitlesButton = new Button();
             TranslateSubtitlesButton = new Button();
+            ProgressLabel = new Label();
             SuspendLayout();
             // 
             // GenerateSubtitlesButton
@@ -52,11 +53,21 @@
             TranslateSubtitlesButton.UseVisualStyleBackColor = true;
             TranslateSubtitlesButton.Click += TranslateSubtitlesButton_Click;
             // 
+            // ProgressLabel
+            // 
+            ProgressLabel.AutoSize = true;
+            ProgressLabel.Font = new Font("Segoe UI", 15.75F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            ProgressLabel.Location = new Point(26, 31);
+            ProgressLabel.Name = "ProgressLabel";
+            ProgressLabel.Size = new Size(0, 30);
+            ProgressLabel.TabIndex = 2;
+            // 
             // MainForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(499, 193);
+            Controls.Add(ProgressLabel);
             Controls.Add(TranslateSubtitlesButton);
             Controls.Add(GenerateSubtitlesButton);
             FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -66,6 +77,7 @@
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Subtitles Generator";
             ResumeLayout(false);
+            PerformLayout();
         }
 
         #endregion
@@ -73,5 +85,6 @@
         private Button GenerateSubtitlesButton;
         private Button button1;
         private Button TranslateSubtitlesButton;
+        private Label ProgressLabel;
     }
 }

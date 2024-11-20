@@ -20,27 +20,45 @@ namespace SubtitlesGenerator
             InitializeComponent();
         }
 
+
         private async void GenerateSubtitles_Click(object sender, EventArgs e)
         {
             var openFileDialog = new OpenFileDialog();
-            openFileDialog.Filter = "mp4 files (*.mp4)|*.mp4";
+            openFileDialog.Filter = "mp4 files (*.mp4)|*.mp4|mp3 files (*.mp3)|*.mp3";
+            openFileDialog.Multiselect = true;
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                try
-                {
-                    var videoPath = openFileDialog.FileName;
-                    var outputPath = $"{videoPath}.srt";
+                ProgressLabel.Text = "Generating Subtitles";
+                GenerateSubtitlesButton.Enabled = false;
+                TranslateSubtitlesButton.Enabled = false;
 
-                    var subtitles = await _audioTranscriber.TranscribeToSrtAsync(openFileDialog.FileName);
-                    var subtitlesFileName = Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), Path.GetFileNameWithoutExtension(openFileDialog.FileName) + ".srt");
 
-                    using var writer = new StreamWriter(subtitlesFileName);
-                    await writer.WriteAsync(subtitles);
-                }
-                catch (Exception ex)
+
+
+                foreach (var fileName in openFileDialog.FileNames)
                 {
-                    MessageBox.Show($"{ex.GetType().Name}-> {ex.Message}", "Unexpected Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    try
+                    {
+                        var videoPath = openFileDialog.FileName;
+                        var outputPath = $"{videoPath}.srt";
+
+                        var subtitles = await _audioTranscriber.TranscribeToSrtAsync(fileName);
+                        var subtitlesFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + ".srt");
+
+                        using var writer = new StreamWriter(subtitlesFileName);
+                        await writer.WriteAsync(subtitles);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"{ex.GetType().Name}-> {ex.Message}", "Unexpected Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                    finally
+                    {
+                        ProgressLabel.Text = string.Empty;
+                        GenerateSubtitlesButton.Enabled = true;
+                        TranslateSubtitlesButton.Enabled = true;
+                    }
                 }
 
             }
@@ -51,15 +69,15 @@ namespace SubtitlesGenerator
             var openFileDialog = new OpenFileDialog();
             openFileDialog.Filter = "Subtitles files (*.srt)|*.srt";
 
-            var language = "he"; 
+            var language = "he";
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
-            { 
+            {
                 var sourceSubtitles = SubtitleProcessor.ParseSrtFile(openFileDialog.FileName);
 
 
                 //var destSubtitles = await TranslationService.TranslateBatchAsync(sourceSubtitles.Take(13).ToList());// new List<Subtitle>(sourceSubtitles.Count);
-                
+
                 var batchSize = 13; // Adjust based on context needs and token limits
                 var translatedSubtitles = new List<Subtitle>();
                 for (int i = 0; i < sourceSubtitles.Count; i += batchSize)
@@ -68,9 +86,9 @@ namespace SubtitlesGenerator
                     var translatedBatch = await TranslationService.TranslateBatchAsync(batch);
                     translatedSubtitles.AddRange(translatedBatch);
                 }
-                
-                var fileName = Path.Combine(Path.GetDirectoryName(openFileDialog.FileName), 
-                    Path.GetFileNameWithoutExtension(openFileDialog.FileName)+"."+language+".srt");
+
+                var fileName = Path.Combine(Path.GetDirectoryName(openFileDialog.FileName),
+                    Path.GetFileNameWithoutExtension(openFileDialog.FileName) + "." + language + ".srt");
                 using var writer = new StreamWriter(fileName);
 
                 foreach (var subtitle in translatedSubtitles)

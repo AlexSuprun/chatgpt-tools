@@ -52,10 +52,11 @@ namespace SubtitlesGenerator
 
             var url = "https://api.openai.com/v1/audio/transcriptions";
 
+            //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
             using (var httpClient = new HttpClient())
             {
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
-                httpClient.Timeout = TimeSpan.FromMinutes(5); 
+                httpClient.Timeout = TimeSpan.FromMinutes(15); 
                 
                 using (var content = new MultipartFormDataContent())
                 {
@@ -78,9 +79,10 @@ namespace SubtitlesGenerator
                         {
                             return responseContent; // Return .srt content
                         }
-
-                        Console.WriteLine("Error: " + responseContent);
-                        return null;
+                        else
+                        {
+                            throw new InvalidOperationException("Unable to process audio file "); 
+                        }
                     }
                     catch (Exception ex)
                     {
